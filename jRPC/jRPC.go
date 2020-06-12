@@ -28,7 +28,8 @@ func Start(addr string) error {
 				return
 			}
 			fmt.Printf("%v  datagram received: bytes: %d, from: %s\n", time.Now(), n, caddr.String())
-			ack, err := stub.Handle(buffer)
+
+			ack, err := stub.Handle(buffer[:n])
 			if err != nil {
 				doneChan <- err
 				return
