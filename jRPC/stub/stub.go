@@ -1,7 +1,6 @@
 package stub
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -11,10 +10,10 @@ import (
 
 // Handle return json format response
 func Handle(msg []byte) ([]byte, error) {
-	msg = bytes.Trim(msg, "\x00")
+	//msg = bytes.Trim(msg, "\x00")
 
 	bm := new(protocol.BaseMsg)
-	bm.Msg = make([]byte, 1024)
+	bm.Msg = make([]byte, 0)
 
 	fmt.Println(string(msg))
 	err := json.Unmarshal(msg, bm)
