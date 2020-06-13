@@ -3,13 +3,16 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
 	"github.com/Analyse4/jrpc-server/handler"
+	"github.com/Analyse4/jrpc-server/jlog"
 	"github.com/Analyse4/jrpc-server/protocol"
 )
 
+var jl *jlog.JLogger
 var hMap map[string]*handlerMeta
 
 type handlerMeta struct {
@@ -23,6 +26,14 @@ func init() {
 
 // Register is used to register handler
 func Register() {
+	var err error
+	jl, err = jlog.Get()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	var logm []string
 	h := new(handler.Handler)
 	hTyp := reflect.TypeOf(h)
 	for i := 0; i < hTyp.NumMethod(); i++ {
@@ -32,8 +43,10 @@ func Register() {
 
 		id := "jrpc." + strings.ToLower(hm.function.Name)
 		hMap[id] = hm
+
+		logm = append(logm, id)
 	}
-	fmt.Printf("registed handler: %v \n", hMap)
+	jl.Debug(strings.Join(logm, ","))
 }
 
 // Handle return the result data by invoking method which is finded by rpc ID

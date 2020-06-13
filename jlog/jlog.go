@@ -1,10 +1,12 @@
 package jlog
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,6 +28,9 @@ const (
 	LstdFlags     = Ldate | Ltime // initial values for the standard logger
 )
 
+// jl is singleton pattern log instance for other package to use.
+var jl *JLogger
+
 // A JLogger represents an active logging object that generates lines of
 // output to an io.Writer. Each logging operation makes a single call to
 // the Writer's Write method. A JLogger can be used simultaneously from
@@ -42,10 +47,21 @@ type JLogger struct {
 // after the log header if the Lmsgprefix flag is provided.
 // The flag argument defines the logging properties.
 func New(out io.Writer, prefix string, flag int) *JLogger {
-	jl := new(JLogger)
+	if jl != nil {
+		return jl
+	}
+	jl = new(JLogger)
 	jl.stdlog = log.New(out, prefix, 0)
 	jl.flag = flag
 	return jl
+}
+
+// Get return jlogger for log.
+func Get() (*JLogger, error) {
+	if jl == nil {
+		return nil, fmt.Errorf("jlogger is nil")
+	}
+	return jl, nil
 }
 
 // SetLevel set log level.
@@ -59,32 +75,41 @@ func (jl *JLogger) SetLevel(level int) {
 // Arguments are handled in the manner of fmt.Println.
 func (jl *JLogger) Info(v ...interface{}) {
 	var s string
-	var sf string
-
 	jl.stdlog.SetPrefix("[INFO] ")
-
 	if jl.flag == LstdFlags|Lshortfile {
-
-		_, fn, ln, ok := runtime.Caller(1)
-		if ok {
-			sf = fn + ":" + strconv.Itoa(ln)
-		}
-		s = time.Now().String() + " " + sf + ":"
+		s = generateStdflagShortFile()
 	}
 
 	jl.stdlog.Println(s, v)
-
-	// _, fn, ln, ok := runtime.Caller(1)
-	// fmt.Println(fn, ln, ok)
 }
 
-// Debug only print logs prefixed by INFO and higher.
+// Debug only print logs prefixed by DEBUG and higher.
 // Debug calls jl.stdlog.Println to print the logger.
 // Println calls l.Output to print to the logger.
 // Arguments are handled in the manner of fmt.Println.
 func (jl *JLogger) Debug(v ...interface{}) {
 	if jl.level != INFO {
+		var s string
 		jl.stdlog.SetPrefix("[DEBUG] ")
-		jl.stdlog.Println(v...)
+		if jl.flag == LstdFlags|Lshortfile {
+			s = generateStdflagShortFile()
+		}
+
+		jl.stdlog.Println(s, v)
 	}
+}
+
+// generateStdflagShortFile generate data, time, file and line number prefix.
+func generateStdflagShortFile() string {
+	var s string
+	var sf string
+
+	_, fn, ln, ok := runtime.Caller(2)
+	if ok {
+		sf = fn + ":" + strconv.Itoa(ln)
+		index := strings.LastIndex(sf, "/")
+		sf = sf[index+1:]
+	}
+	s = time.Now().Format(time.RFC3339) + " " + sf + ":"
+	return s
 }
