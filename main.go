@@ -9,16 +9,16 @@ import (
 	"github.com/Analyse4/jrpc-server/jlog"
 )
 
-var jl *jlog.JLogger
-
 func init() {
-	jl = jlog.New(os.Stdout, "", jlog.LstdFlags|jlog.Lshortfile)
-	jl.SetLevel(jlog.DEBUG)
+	jlog.Init(os.Stdout, "", jlog.LstdFlags|jlog.Lshortfile)
+	jlog.SetLevel(jlog.DEBUG)
 }
 
 func main() {
-	jl.Info("jrpc server start")
+	jlog.Infof("test: %d\n", 1)
+
 	jruntime.Register()
+	jlog.Info("jrpc server start")
 	err := jRPC.Start(":4241")
 	if err != nil {
 		fmt.Println(err)

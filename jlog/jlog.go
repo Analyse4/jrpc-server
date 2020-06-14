@@ -41,31 +41,27 @@ type JLogger struct {
 	flag   int
 }
 
-// New creates a new JLogger. The out variable sets the
+// Init creates a new JLogger. The out variable sets the
 // destination to which log data will be written.
 // The prefix appears at the beginning of each generated log line, or
 // after the log header if the Lmsgprefix flag is provided.
 // The flag argument defines the logging properties.
-func New(out io.Writer, prefix string, flag int) *JLogger {
-	if jl != nil {
-		return jl
-	}
+func Init(out io.Writer, prefix string, flag int) {
 	jl = new(JLogger)
 	jl.stdlog = log.New(out, prefix, 0)
 	jl.flag = flag
-	return jl
 }
 
-// Get return jlogger for log.
-func Get() (*JLogger, error) {
-	if jl == nil {
-		return nil, fmt.Errorf("jlogger is nil")
-	}
-	return jl, nil
-}
+// // Get return jlogger for log.
+// func Get() (*JLogger, error) {
+// 	if jl == nil {
+// 		return nil, fmt.Errorf("jlogger is nil")
+// 	}
+// 	return jl, nil
+// }
 
 // SetLevel set log level.
-func (jl *JLogger) SetLevel(level int) {
+func SetLevel(level int) {
 	jl.level = level
 }
 
@@ -73,21 +69,22 @@ func (jl *JLogger) SetLevel(level int) {
 // Info calls jl.stdlog.Println to print the logger.
 // Println calls l.Output to print to the logger.
 // Arguments are handled in the manner of fmt.Println.
-func (jl *JLogger) Info(v ...interface{}) {
+func Info(v ...interface{}) {
 	var s string
 	jl.stdlog.SetPrefix("[INFO] ")
 	if jl.flag == LstdFlags|Lshortfile {
 		s = generateStdflagShortFile()
 	}
 
-	jl.stdlog.Println(s, v)
+	s = s + fmt.Sprintln(v...)
+	jl.stdlog.Print(s)
 }
 
 // Debug only print logs prefixed by DEBUG and higher.
 // Debug calls jl.stdlog.Println to print the logger.
 // Println calls l.Output to print to the logger.
 // Arguments are handled in the manner of fmt.Println.
-func (jl *JLogger) Debug(v ...interface{}) {
+func Debug(v ...interface{}) {
 	if jl.level != INFO {
 		var s string
 		jl.stdlog.SetPrefix("[DEBUG] ")
@@ -95,8 +92,22 @@ func (jl *JLogger) Debug(v ...interface{}) {
 			s = generateStdflagShortFile()
 		}
 
-		jl.stdlog.Println(s, v)
+		s = s + fmt.Sprintln(v...)
+		jl.stdlog.Print(s)
 	}
+}
+
+// Infof calls stdlog.Printf to print to the logger.
+// Printf calls l.Output to print to the logger.
+// Arguments are handled in the manner of fmt.Printf.
+func Infof(format string, v ...interface{}) {
+	var s string
+	jl.stdlog.SetPrefix("[INFO] ")
+	if jl.flag == LstdFlags|Lshortfile {
+		s = generateStdflagShortFile()
+	}
+
+	jl.stdlog.Printf(s+format, v...)
 }
 
 // generateStdflagShortFile generate data, time, file and line number prefix.
@@ -110,6 +121,6 @@ func generateStdflagShortFile() string {
 		index := strings.LastIndex(sf, "/")
 		sf = sf[index+1:]
 	}
-	s = time.Now().Format(time.RFC3339) + " " + sf + ":"
+	s = time.Now().Format(time.RFC3339) + " " + sf + ": "
 	return s
 }
