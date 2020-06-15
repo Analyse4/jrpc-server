@@ -2,7 +2,6 @@ package stub
 
 import (
 	"encoding/json"
-	"fmt"
 
 	jruntime "github.com/Analyse4/jrpc-server/jRPC/runtime"
 	"github.com/Analyse4/jrpc-server/protocol"
@@ -15,10 +14,8 @@ func Handle(msg []byte) ([]byte, error) {
 	bm := new(protocol.BaseMsg)
 	bm.Msg = make([]byte, 0)
 
-	fmt.Println(string(msg))
 	err := json.Unmarshal(msg, bm)
 	if err != nil {
-		fmt.Println(err)
 		return []byte(""), err
 	}
 

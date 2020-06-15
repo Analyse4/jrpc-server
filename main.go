@@ -15,8 +15,6 @@ func init() {
 }
 
 func main() {
-	jlog.Infof("test: %d\n", 1)
-
 	jruntime.Register()
 	jlog.Info("jrpc server start")
 	err := jRPC.Start(":4241")

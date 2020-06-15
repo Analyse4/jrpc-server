@@ -1,11 +1,10 @@
 package jRPC
 
 import (
-	"fmt"
 	"net"
-	"time"
 
 	"github.com/Analyse4/jrpc-server/jRPC/stub"
+	"github.com/Analyse4/jrpc-server/jlog"
 )
 
 const maxBufferSize = 1024
@@ -27,7 +26,7 @@ func Start(addr string) error {
 				doneChan <- err
 				return
 			}
-			fmt.Printf("%v  datagram received: bytes: %d, from: %s\n", time.Now(), n, caddr.String())
+			jlog.Debugf("datagram received: bytes: %d, from: %s\n", n, caddr.String())
 
 			ack, err := stub.Handle(buffer[:n])
 			if err != nil {
@@ -39,7 +38,7 @@ func Start(addr string) error {
 				doneChan <- err
 				return
 			}
-			fmt.Printf("%v  datagram writed: byets: %d, to: %s\n", time.Now(), n, caddr.String())
+			jlog.Debugf("datagram writed: byets: %d, to: %s\n", n, caddr.String())
 		}
 	}()
 

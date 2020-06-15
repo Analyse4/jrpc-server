@@ -110,6 +110,21 @@ func Infof(format string, v ...interface{}) {
 	jl.stdlog.Printf(s+format, v...)
 }
 
+// Debugf calls stdlog.Printf to print to the logger.
+// Printf calls l.Output to print to the logger.
+// Arguments are handled in the manner of fmt.Printf.
+func Debugf(format string, v ...interface{}) {
+	if jl.level != INFO {
+		var s string
+		jl.stdlog.SetPrefix("[DEBUG] ")
+		if jl.flag == LstdFlags|Lshortfile {
+			s = generateStdflagShortFile()
+		}
+
+		jl.stdlog.Printf(s+format, v...)
+	}
+}
+
 // generateStdflagShortFile generate data, time, file and line number prefix.
 func generateStdflagShortFile() string {
 	var s string
