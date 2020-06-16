@@ -1,10 +1,14 @@
 package jRPC
 
 import (
+	"encoding/json"
+	"fmt"
 	"net"
 
+	"github.com/Analyse4/jrpc-server/jRPC/errors"
 	"github.com/Analyse4/jrpc-server/jRPC/stub"
 	"github.com/Analyse4/jrpc-server/jlog"
+	"github.com/Analyse4/jrpc-server/protocol"
 )
 
 const maxBufferSize = 1024
@@ -28,12 +32,22 @@ func Start(addr string) error {
 			}
 			jlog.Debugf("datagram received: bytes: %d, from: %s\n", n, caddr.String())
 
-			ack, err := stub.Handle(buffer[:n])
+			ack := new(protocol.BaseMsgAck)
+			err = stub.Handle(buffer[:n], ack)
 			if err != nil {
+				ack.Code = err.(*errors.ErrJrpc).Code
+				ack.Msg = err.(*errors.ErrJrpc).Msg
+			} else {
+				ack.Code = errors.SUCCESS
+				ack.Msg = errors.GetMsg(errors.SUCCESS)
+			}
+			jack, err := json.Marshal(ack)
+			if err != nil {
+				err = errors.NewErr(errors.SERVERINTERNALERROR, errors.GetMsg(errors.SERVERINTERNALERROR), fmt.Errorf("json unmarshal error"))
 				doneChan <- err
 				return
 			}
-			n, err = pc.WriteTo(ack, caddr)
+			n, err = pc.WriteTo(jack, caddr)
 			if err != nil {
 				doneChan <- err
 				return

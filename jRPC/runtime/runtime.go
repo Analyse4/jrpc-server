@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Analyse4/jrpc-server/handler"
+	"github.com/Analyse4/jrpc-server/jRPC/errors"
 	"github.com/Analyse4/jrpc-server/jlog"
 	"github.com/Analyse4/jrpc-server/protocol"
 )
@@ -41,20 +42,20 @@ func Register() {
 }
 
 // Handle return the result data by invoking method which is finded by rpc ID
-func Handle(msg *protocol.BaseMsg) ([]byte, error) {
+func Handle(msg *protocol.BaseMsgReq) ([]byte, error) {
 	data := make([]byte, 1024)
 	hm, ok := hMap[msg.ID]
 	if !ok {
-		return data, fmt.Errorf("coressponding handler is not exist")
+		return data, errors.NewErr(errors.FUNCTIONNOTFOUND, errors.GetMsg(errors.FUNCTIONNOTFOUND), fmt.Errorf("function %s isn't registed", msg.ID))
 	}
 	req := reflect.New(hm.input.Elem())
-	err := json.Unmarshal(msg.Msg, req.Interface())
+	err := json.Unmarshal(msg.Data, req.Interface())
 	if err != nil {
-		return data, err
+		return data, errors.NewErr(errors.SERVERINTERNALERROR, errors.GetMsg(errors.SERVERINTERNALERROR), fmt.Errorf("json unmarshal error"))
 	}
 	result := hm.function.Func.Call([]reflect.Value{reflect.ValueOf(new(handler.Handler)), req})
 	if result[1].Interface() != nil {
-		return data, fmt.Errorf(result[1].String())
+		return data, result[1].Interface().(*errors.ErrJrpc)
 	}
 	return result[0].Bytes(), nil
 }

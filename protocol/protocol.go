@@ -1,9 +1,17 @@
 package protocol
 
-// BaseMsg is basic msg struct for jRPC
-type BaseMsg struct {
-	ID  string `json:"id"`
-	Msg []byte `json:"msg"`
+// BaseMsgReq is basic req msg struct for jRPC
+type BaseMsgReq struct {
+	ID   string `json:"id"`
+	Data []byte `json:"msg"`
+}
+
+// BaseMsgAck is basic ack msg struct for jRPC
+type BaseMsgAck struct {
+	Code int
+	Msg  string
+	ID   string `json:"id"`
+	Data []byte `json:"msg"`
 }
 
 type SimpleReq struct {
